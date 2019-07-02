@@ -81,7 +81,7 @@ add `FollowKeyboard.swift` to your project.
     }
 ```
 
-> You'd better add the code to `viewWillAppear:` and `viewWillDisappear`
+> You'd better add the code to `viewWillAppear:` and `viewDidDisappear`
 
 ## Contact 
 
