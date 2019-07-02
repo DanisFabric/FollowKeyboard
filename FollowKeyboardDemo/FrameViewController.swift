@@ -17,16 +17,15 @@ class FrameViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        bottomBar.backgroundColor = UIColor.purpleColor()
+        bottomBar.backgroundColor = UIColor.purple
         bottomBar.frame = CGRect(x: 0, y: view.frame.height - 60, width: view.frame.width, height: 60)
         
         inputTextField.placeholder = "Please say Hi"
-        inputTextField.backgroundColor = UIColor.clearColor()
-        inputTextField.frame = CGRectInset(bottomBar.bounds, 5, 5)
-        inputTextField.textColor = UIColor.whiteColor()
+        inputTextField.backgroundColor = UIColor.clear
+        inputTextField.frame = bottomBar.bounds.insetBy(dx: 5, dy: 5)
+        inputTextField.textColor = UIColor.white
         
-        let tapBackground = UITapGestureRecognizer(target: self, action: "onTapBackground:")
-        view.userInteractionEnabled = true
+        let tapBackground = UITapGestureRecognizer(target: self, action: #selector(onTapBackground(tap:)))
         view.addGestureRecognizer(tapBackground)
     
         view.addSubview(bottomBar)
@@ -39,28 +38,20 @@ class FrameViewController: UIViewController {
     }
     
     let fk = FollowKeyboard()
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        fk.followKeyboard(withAnimations: { (keyboardFrame, duration, type) -> Void in
-            
+        fk.followKeyboard(withAnimations: { [unowned self] (keyboardFrame, duration, type) in
             switch type {
-            case .Show:
-                self.bottomBar.frame = CGRectOffset(self.bottomBar.frame, 0, -keyboardFrame.height)
-            case .Hide:
-                self.bottomBar.frame = CGRectOffset(self.bottomBar.frame, 0, keyboardFrame.height)
+            case .show:
+                self.bottomBar.frame = self.bottomBar.frame.offsetBy(dx: 0, dy: -keyboardFrame.height)
+            case .hide:
+                self.bottomBar.frame = self.bottomBar.frame.offsetBy(dx: 0, dy: keyboardFrame.height)
             }
-            
-            }) { (finished) -> Void in
-                
-        }
+        }, completionBlock: nil)
     }
-    override func viewWillDisappear(animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-        fk.unfollowKeyboard()
-    }
-    func onTapBackground(tap: UITapGestureRecognizer) {
+    
+    @objc private func onTapBackground(tap: UITapGestureRecognizer) {
         inputTextField.resignFirstResponder()
     }
 

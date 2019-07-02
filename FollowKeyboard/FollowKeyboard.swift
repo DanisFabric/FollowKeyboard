@@ -8,44 +8,37 @@
 
 import UIKit
 
-public enum FollowKeyboardType : Equatable{
-    case Show
-    case Hide
-}
-
-public func ==(lhs: FollowKeyboardType, rhs: FollowKeyboardType) -> Bool {
-    switch (lhs,rhs) {
-    case (.Show,.Show):
-        return true
-    case (.Hide, .Hide):
-        return true
-    default:
-        return false
-    }
-}
-
-public typealias FollowKeyboardAnimationsBlock = (keyboardFrame: CGRect,duration: Double, type: FollowKeyboardType) -> Void
-public typealias FollowKeyboardCompletionBlock = (finished: Bool) -> Void
-
 private let AnimationsBlockKey = "FKAnimationsBlock"
 private let CompletionBlockKey = "FKCompletionBlock"
 
 public class FollowKeyboard: NSObject {
+    public enum AppearType {
+        case show
+        case hide
+        
+        public var isShow: Bool {
+            return self == .show
+        }
+        
+        public var isHide: Bool {
+            return self == .hide
+        }
+    }
     
-    private var animationsBlock: FollowKeyboardAnimationsBlock?
-    private var completionBlock: FollowKeyboardCompletionBlock?
+    private var animationsBlock: ((CGRect,Double, AppearType) -> Void)?
+    private var completionBlock: ((Bool) -> Void)?
     
     public override init() {
         super.init()
     }
     
-    public func followKeyboard(withAnimations animationsBlock: FollowKeyboardAnimationsBlock?, completionBlock: FollowKeyboardCompletionBlock?) {
+    public func followKeyboard(withAnimations animationsBlock: ((CGRect,Double, AppearType) -> Void)?, completionBlock: ((Bool) -> Void)?) {
         
         self.animationsBlock = animationsBlock
         self.completionBlock = completionBlock
         
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "onKeyboardWillShowNotification:", name: UIKeyboardWillShowNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "onKeyboardWillHideNotification:", name: UIKeyboardWillHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(onKeyboardWillShow(notifcation:)), name: UIApplication.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(onKeyboardWillHide(notifcation:)), name: UIApplication.keyboardWillHideNotification, object: nil)
     }
     
     public func unfollowKeyboard() {
@@ -53,27 +46,31 @@ public class FollowKeyboard: NSObject {
         self.animationsBlock = nil
         self.completionBlock = nil
         
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
+        NotificationCenter.default.removeObserver(self)
     }
     
-    func onKeyboardWillShowNotification(notifcation: NSNotification) {
-        commitAnimationsWithNotification(notifcation, type: .Show)
+    @objc private func onKeyboardWillShow(notifcation: NSNotification) {
+        commitAnimations(notification: notifcation, type: .show)
     }
-    func onKeyboardWillHideNotification(notifcation: NSNotification) {
-        commitAnimationsWithNotification(notifcation, type: .Hide)
+    @objc private func onKeyboardWillHide(notifcation: NSNotification) {
+        commitAnimations(notification: notifcation, type: .hide)
     }
-    private func commitAnimationsWithNotification(notification: NSNotification, type: FollowKeyboardType) {
-        let keyboardFrame = notification.userInfo![UIKeyboardFrameEndUserInfoKey]?.CGRectValue
-        let curve = notification.userInfo![UIKeyboardAnimationCurveUserInfoKey]?.integerValue
-        let duration = notification.userInfo![UIKeyboardAnimationDurationUserInfoKey]?.doubleValue
-        
-        UIView.animateWithDuration(duration!, delay: 0, options: [.BeginFromCurrentState], animations: { () -> Void in
-            UIView.setAnimationCurve(UIViewAnimationCurve(rawValue: curve!)!)
+    private func commitAnimations(notification: NSNotification, type: AppearType) {
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else {
+            return
+        }
+        guard let curveRaw = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? Int else {
+            return
+        }
+        guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else {
+            return
+        }
+        UIView.animate(withDuration: duration, delay: 0, options: [.beginFromCurrentState], animations: {
+            UIView.setAnimationCurve(UIView.AnimationCurve(rawValue: curveRaw)!)
             
-            self.animationsBlock?(keyboardFrame: keyboardFrame!, duration: duration!, type: type)
+            self.animationsBlock?(keyboardFrame, duration, type)
             
-            }, completion: completionBlock)
+        }, completion: completionBlock)
         
     }
 }

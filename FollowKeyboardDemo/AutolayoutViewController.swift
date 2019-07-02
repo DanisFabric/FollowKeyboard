@@ -22,26 +22,23 @@ class AutolayoutViewController: UIViewController {
     }
     
     let fk = FollowKeyboard()
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        fk.followKeyboard(withAnimations: { (keyboardFrame, duration, type) -> Void in
-            
+        fk.followKeyboard(withAnimations: { (keyboardFrame, duration, type) in
             switch type {
-            case .Show:
+            case .show:
                 self.barBottomConstaint.constant += keyboardFrame.height
                 self.view.layoutIfNeeded()
-            case .Hide:
+            case .hide:
                 self.barBottomConstaint.constant -= keyboardFrame.height
                 self.view.layoutIfNeeded()
             }
-            
-            }) { (finished) -> Void in
-                
-        }
+        }, completionBlock: nil)
     }
-    override func viewWillDisappear(animated: Bool) {
-        super.viewWillDisappear(animated)
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
         
         fk.unfollowKeyboard()
     }
@@ -51,10 +48,10 @@ class AutolayoutViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    @IBAction func onTapBackground(sender: AnyObject) {
+    @IBAction func onTouchBackgroundView(_ sender: Any) {
         inputTextField.resignFirstResponder()
     }
-
+    
     /*
     // MARK: - Navigation
 
