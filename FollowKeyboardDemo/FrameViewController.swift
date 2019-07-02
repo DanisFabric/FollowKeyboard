@@ -38,6 +38,7 @@ class FrameViewController: UIViewController {
     }
     
     let fk = FollowKeyboard()
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
@@ -49,6 +50,12 @@ class FrameViewController: UIViewController {
                 self.bottomBar.frame = self.bottomBar.frame.offsetBy(dx: 0, dy: keyboardFrame.height)
             }
         }, completionBlock: nil)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        fk.unfollowKeyboard()
     }
     
     @objc private func onTapBackground(tap: UITapGestureRecognizer) {
